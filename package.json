@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "scripts": {
+    "dev": "esbuild response.js --bundle --servedir=dist --outdir=dist"
+  },
+  "dependencies": {}
+}
