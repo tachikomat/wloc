@@ -382,14 +382,15 @@
 
   // response-shadowrocket.js
   var DEFAULTS = {
-    mode: "random",
-    centerLatitude: 30.30329,
-    centerLongitude: 120.10133,
+    mode: "pass",
+    centerLatitude: null,
+    centerLongitude: null,
     radius: 5,
     latitude: null,
     longitude: null,
     altitude: 8,
-    accuracy: 25
+    accuracy: 25,
+    logLevel: "info"
   };
   function parseArgument(argument) {
     const params = new URLSearchParams(argument || "");
@@ -398,12 +399,36 @@
       if (!(key in config)) continue;
       if (key === "mode") {
         config.mode = value;
+      } else if (key === "logLevel") {
+        config.logLevel = value;
       } else {
         const number = Number(value);
         if (Number.isFinite(number)) config[key] = number;
       }
     }
     return config;
+  }
+  function readSavedConfig() {
+    try {
+      const value = $persistentStore?.read("wloc_settings");
+      if (!value) return null;
+      const settings = JSON.parse(value);
+      const longitude = Number(settings.longitude);
+      const latitude = Number(settings.latitude);
+      const accuracy = Number(settings.accuracy ?? DEFAULTS.accuracy);
+      const altitude = settings.altitude == null ? DEFAULTS.altitude : Number(settings.altitude);
+      if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+      return {
+        mode: "fixed",
+        longitude,
+        latitude,
+        accuracy: Number.isFinite(accuracy) ? accuracy : DEFAULTS.accuracy,
+        altitude: Number.isFinite(altitude) ? altitude : DEFAULTS.altitude
+      };
+    } catch (error) {
+      console.log(`wloc: read settings failed: ${error?.message || error}`);
+      return null;
+    }
   }
   function targetFromConfig(config) {
     if (config.mode === "fixed" && config.latitude != null && config.longitude != null) {
@@ -413,6 +438,9 @@
         altitude: config.altitude,
         accuracy: config.accuracy
       };
+    }
+    if (config.mode !== "random" || config.centerLatitude == null || config.centerLongitude == null) {
+      return null;
     }
     const [latitude, longitude] = randomPoint(
       config.centerLatitude,
@@ -437,11 +465,16 @@
   }
   (async () => {
     try {
-      const config = parseArgument(typeof $argument === "string" ? $argument : "");
-      const { body, stats } = await patchWithStats(
-        responseBodyBytes(),
-        targetFromConfig(config)
+      const argumentConfig = parseArgument(
+        typeof $argument === "string" ? $argument : ""
       );
+      const target = targetFromConfig(readSavedConfig() ?? argumentConfig);
+      if (!target) {
+        console.log("wloc: pass-through, no target location");
+        $done({});
+        return;
+      }
+      const { body, stats } = await patchWithStats(responseBodyBytes(), target);
       console.log(`wloc: ${JSON.stringify(stats)}`);
       $done({
         bodyBytes: body.buffer,
