@@ -1,9 +1,28 @@
 (() => {
   // wloc-settings-shadowrocket.js
   var STORAGE_KEY = "wloc_settings";
+  function decodeParam(value) {
+    try {
+      return decodeURIComponent(String(value || "").replace(/\+/g, " "));
+    } catch {
+      return String(value || "");
+    }
+  }
   function parseQuery(url) {
     const query = String(url || "").split("?")[1] || "";
-    return new URLSearchParams(query);
+    const params = {};
+    for (const part of query.split("&")) {
+      if (!part) continue;
+      const equalIndex = part.indexOf("=");
+      const key = equalIndex === -1 ? part : part.slice(0, equalIndex);
+      const value = equalIndex === -1 ? "" : part.slice(equalIndex + 1);
+      params[decodeParam(key)] = decodeParam(value);
+    }
+    return {
+      get(key) {
+        return Object.prototype.hasOwnProperty.call(params, key) ? params[key] : null;
+      }
+    };
   }
   function jsonResponse(body) {
     return {

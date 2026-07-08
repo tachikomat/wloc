@@ -12,11 +12,34 @@ const DEFAULTS = {
   logLevel: "info",
 }
 
+function decodeParam(value) {
+  try {
+    return decodeURIComponent(String(value || "").replace(/\+/g, " "))
+  } catch {
+    return String(value || "")
+  }
+}
+
+function parseParams(input) {
+  const query = String(input || "").replace(/^\?/, "")
+  const entries = []
+
+  for (const part of query.split("&")) {
+    if (!part) continue
+
+    const equalIndex = part.indexOf("=")
+    const key = equalIndex === -1 ? part : part.slice(0, equalIndex)
+    const value = equalIndex === -1 ? "" : part.slice(equalIndex + 1)
+    entries.push([decodeParam(key), decodeParam(value)])
+  }
+
+  return entries
+}
+
 function parseArgument(argument) {
-  const params = new URLSearchParams(argument || "")
   const config = { ...DEFAULTS }
 
-  for (const [key, value] of params.entries()) {
+  for (const [key, value] of parseParams(argument)) {
     if (!(key in config)) continue
     if (key === "mode") {
       config.mode = value
