@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "esbuild response.js response-periodical.js --bundle --servedir=dist --outdir=dist"
+    "build": "esbuild response.js response-periodical.js response-shadowrocket.js --bundle --outdir=dist",
+    "dev": "esbuild response.js response-periodical.js response-shadowrocket.js --bundle --servedir=dist --outdir=dist"
   },
   "dependencies": {}
 }
