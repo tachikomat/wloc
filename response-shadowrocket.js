@@ -54,6 +54,10 @@ function parseArgument(argument) {
   return config
 }
 
+function defaultAltitude() {
+  return DEFAULTS.altitude + Math.random()
+}
+
 function readSavedConfig() {
   try {
     const value = $persistentStore?.read("wloc_settings")
@@ -64,7 +68,7 @@ function readSavedConfig() {
     const latitude = Number(settings.latitude)
     const accuracy = Number(settings.accuracy ?? DEFAULTS.accuracy)
     const altitude =
-      settings.altitude == null ? DEFAULTS.altitude : Number(settings.altitude)
+      settings.altitude == null ? defaultAltitude() : Number(settings.altitude)
 
     if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null
 
@@ -73,7 +77,7 @@ function readSavedConfig() {
       longitude,
       latitude,
       accuracy: Number.isFinite(accuracy) ? accuracy : DEFAULTS.accuracy,
-      altitude: Number.isFinite(altitude) ? altitude : DEFAULTS.altitude,
+      altitude: Number.isFinite(altitude) ? altitude : defaultAltitude(),
     }
   } catch (error) {
     console.log(`wloc: read settings failed: ${error?.message || error}`)

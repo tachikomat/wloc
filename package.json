@@ -4,5 +4,7 @@
     "build": "esbuild response.js response-periodical.js response-shadowrocket.js wloc-settings-shadowrocket.js --bundle --outdir=dist",
     "dev": "esbuild response.js response-periodical.js response-shadowrocket.js wloc-settings-shadowrocket.js --bundle --servedir=dist --outdir=dist"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
 }
